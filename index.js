@@ -128,10 +128,6 @@ function DolarTL(dolar) {
   return TL;
 }
 
-const filter = (reaction, user) => {
-    return reaction.emoji.name === '✔️' && user.id === message.author.id;
-};
-
 var baslangicZamani = null;
 
 client.on("ready", async () => {
@@ -146,7 +142,7 @@ client.on("messageCreate", async (message) => {
   if (!message.content.startsWith(prefix)) return;
 
   if (message.channel.id != 1206254246656348211) {
-    return;
+    //return;
   }
 
   let suankiZaman = new Date();
@@ -287,12 +283,17 @@ client.on("messageCreate", async (message) => {
     message.channel.send(end_content).then(function(bot_mes) {
        
       let del = "❌"
+      let run_time = 5 * 60 * 1000
       
       setTimeout(function(){   
         bot_mes.react(del);
       }, 2500);
       
-      const collector = bot_mes.createReactionCollector(filter, { time: 12000 });
+      let filter = (reaction, user) => {
+          return reaction.emoji.name === del && user.id === message.author.id;
+      };
+
+      let collector = bot_mes.createReactionCollector(filter, { time: run_time });
 
       collector.on('collect', (reaction, user) => {
 
@@ -303,6 +304,10 @@ client.on("messageCreate", async (message) => {
             bot_mes.delete()
            }
          }
+      });
+      
+      collector.on('end', (collected, reason) => {
+        bot_mes.reactions.removeAll().catch(error => console.error('Failed to clear reactions:', error));
       });
     });
   }
