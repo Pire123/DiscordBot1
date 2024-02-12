@@ -31,7 +31,7 @@ function Calc2(İtibariDeğer, ters = false, iskonto = 0) {
    * İtibariDeğer -> Değişkendir, Robux veya para olabilir.
    */
 
-  let kDeğeri = 2.5;
+  let kDeğeri = 2.75;
 
   let robux = 0;
   let fiyat = 0;
