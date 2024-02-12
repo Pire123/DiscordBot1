@@ -128,6 +128,10 @@ function DolarTL(dolar) {
   return TL;
 }
 
+const filter = (reaction, user) => {
+    return reaction.emoji.name === '✔️' && user.id === message.author.id;
+};
+
 var baslangicZamani = null;
 
 client.on("ready", async () => {
@@ -142,7 +146,7 @@ client.on("messageCreate", async (message) => {
   if (!message.content.startsWith(prefix)) return;
 
   if (message.channel.id != 1206254246656348211) {
-    return;
+    //return;
   }
 
   let suankiZaman = new Date();
@@ -275,10 +279,32 @@ client.on("messageCreate", async (message) => {
     }
   } else if (data[0] == "yardım") {
     end_content = "**!robux 1000** veya **!fiyat 2.5**\n\rEn fazla 30000 robux alabilirsiniz.";
+  } else if (data[0] == "deneme") {
+    
   }
 
   if (end_content != null) {
-    message.channel.send(end_content);
+    message.channel.send(end_content).then(function(bot_mes) {
+       
+      let del = "❌"
+      
+      setTimeout(function(){   
+        bot_mes.react(del);
+      }, 2500);
+      
+      const collector = bot_mes.createReactionCollector(filter, { time: 12000 });
+
+      collector.on('collect', (reaction, user) => {
+
+         if(user.id == message.author.id) {
+           if (reaction.emoji.name == del) {
+            //console.log(`Collected ${reaction.emoji.name} from ${user.tag}`);
+            message.delete()
+            bot_mes.delete()
+           }
+         }
+      });
+    });
   }
 
   //message.channel.send("My Message");
@@ -286,11 +312,11 @@ client.on("messageCreate", async (message) => {
 
 function ServerRequestListener(request, response) {
   response.writeHead(200);
-  response.write("OK");
+  response.write("OK v1");
   response.end();
 }
 
-client.login(process.env.token);
+client.login(process.env.DISCORD_BOT_TOKEN);
 
 server.on("request", ServerRequestListener);
 
