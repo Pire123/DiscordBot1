@@ -25,14 +25,14 @@ const client = new Client({
   ],
 });
 
+const kDeğeri = 2.75;
+
 function Calc2(İtibariDeğer, ters = false, iskonto = 0) {
   /*
    * kDeğeri -> 1k robuxun değeri
    * İtibariDeğer -> Değişkendir, Robux veya para olabilir.
    */
-
-  let kDeğeri = 2.75;
-
+  
   let robux = 0;
   let fiyat = 0;
 
@@ -271,7 +271,7 @@ client.on("messageCreate", async (message) => {
         end_content = end_content + "(**%" + iskonto + "**)";
       }
     } else {
-      end_content = "1k robux şu an 2.5 Tether USD";
+      end_content = "1k robux şu an " + kDeğeri + " Tether USD";
     }
   } else if (data[0] == "yardım") {
     end_content = "**!robux 1000** veya **!fiyat 2.5**\n\rEn fazla 30000 robux alabilirsiniz.";
