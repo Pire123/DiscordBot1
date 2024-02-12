@@ -146,7 +146,7 @@ client.on("messageCreate", async (message) => {
   if (!message.content.startsWith(prefix)) return;
 
   if (message.channel.id != 1206254246656348211) {
-    //return;
+    return;
   }
 
   let suankiZaman = new Date();
