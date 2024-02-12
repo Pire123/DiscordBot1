@@ -316,7 +316,7 @@ function ServerRequestListener(request, response) {
   response.end();
 }
 
-client.login(process.env.DISCORD_BOT_TOKEN);
+client.login(process.env.token);
 
 server.on("request", ServerRequestListener);
 
