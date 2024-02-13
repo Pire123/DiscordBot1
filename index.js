@@ -300,8 +300,8 @@ client.on("messageCreate", async (message) => {
          if(user.id == message.author.id) {
            if (reaction.emoji.name == del) {
             //console.log(`Collected ${reaction.emoji.name} from ${user.tag}`);
-            message.delete()
             bot_mes.delete()
+            message.delete()
            }
          }
       });
