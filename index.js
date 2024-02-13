@@ -24,7 +24,6 @@ const client = new Client({
     Partials.Reaction,
   ],
 });
-
 const kDeğeri = 2.75;
 
 function Calc2(İtibariDeğer, ters = false, iskonto = 0) {
@@ -32,7 +31,7 @@ function Calc2(İtibariDeğer, ters = false, iskonto = 0) {
    * kDeğeri -> 1k robuxun değeri
    * İtibariDeğer -> Değişkendir, Robux veya para olabilir.
    */
-  
+
   let robux = 0;
   let fiyat = 0;
 
@@ -175,6 +174,7 @@ client.on("messageCreate", async (message) => {
     return;
   }
 
+  let fill = "1k robux şu an " + kDeğeri + " Tether USD";
   let end_content = null;
   let end_cal = null;
 
@@ -217,7 +217,7 @@ client.on("messageCreate", async (message) => {
         end_content = end_content + "(**%" + iskonto + "**)";
       }
     } else {
-      end_content = "1k robux şu an 2.5 Tether USD";
+      end_content = fill
     }
   } else if (data[0] == "fiyat") {
     if (data[1] != null) {
@@ -271,19 +271,19 @@ client.on("messageCreate", async (message) => {
         end_content = end_content + "(**%" + iskonto + "**)";
       }
     } else {
-      end_content = "1k robux şu an " + kDeğeri + " Tether USD";
+      end_content = fill
     }
   } else if (data[0] == "yardım") {
     end_content = "**!robux 1000** veya **!fiyat 2.5**\n\rEn fazla 30000 robux alabilirsiniz.";
-  } else if (data[0] == "deneme") {
-    
+  } else if (data[0] == "güncelle") {
+   
   }
 
   if (end_content != null) {
     message.channel.send(end_content).then(function(bot_mes) {
        
       let del = "❌"
-      let run_time = 5 * 60 * 1000
+      let run_time = 60 * 60 * 1000 // 1 saat
       
       setTimeout(function(){   
         bot_mes.react(del);
@@ -293,7 +293,7 @@ client.on("messageCreate", async (message) => {
           return reaction.emoji.name === del && user.id === message.author.id;
       };
 
-      let collector = bot_mes.createReactionCollector(filter, { time: run_time });
+      let collector = bot_mes.createReactionCollector(true, { time: run_time });
 
       collector.on('collect', (reaction, user) => {
 
@@ -306,9 +306,10 @@ client.on("messageCreate", async (message) => {
          }
       });
       
-      collector.on('end', (collected, reason) => {
-        bot_mes.reactions.removeAll().catch(error => console.error('Failed to clear reactions:', error));
-      });
+      setTimeout(function(){   
+         bot_mes.reactions.removeAll().catch(error => console.error('Failed to clear reactions:', error));
+      }, run_time);
+      
     });
   }
 
