@@ -274,9 +274,9 @@ client.on("messageCreate", async (message) => {
       end_content = fill
     }
   } else if (data[0] == "yardım") {
-    end_content = "**!robux 1000** veya **!fiyat 2.5**\n\rEn fazla 30000 robux alabilirsiniz.";
+    end_content = "**!robux 1000** veya **!fiyat 2.5**\nEn fazla 30000 robux alabilirsiniz.";
   } else if (data[0] == "güncelle") {
-   
+      
   }
 
   if (end_content != null) {
@@ -300,14 +300,15 @@ client.on("messageCreate", async (message) => {
          if(user.id == message.author.id) {
            if (reaction.emoji.name == del) {
             //console.log(`Collected ${reaction.emoji.name} from ${user.tag}`);
-            bot_mes.delete()
             message.delete()
+            bot_mes.delete()
            }
          }
       });
       
       setTimeout(function(){   
          bot_mes.reactions.removeAll().catch(error => console.error('Failed to clear reactions:', error));
+         collector.stop();
       }, run_time);
       
     });
