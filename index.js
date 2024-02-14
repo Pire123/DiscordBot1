@@ -319,7 +319,7 @@ client.on("messageCreate", async (message) => {
 
 function ServerRequestListener(request, response) {
   response.writeHead(200);
-  response.write("OK v1");
+  response.write("OK v2");
   response.end();
 }
 
