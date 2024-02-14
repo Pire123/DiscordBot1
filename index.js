@@ -130,6 +130,7 @@ function DolarTL(dolar) {
 var baslangicZamani = null;
 
 client.on("ready", async () => {
+  console.log("Güncelleniyor");
   await KurGüncelle();
   baslangicZamani = new Date();
   console.log("Ready!");
