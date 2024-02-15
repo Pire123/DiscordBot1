@@ -79,6 +79,9 @@ var indirim = [
   [20000, 30000, 10],
 ];
 
+var baslangicZamani = null;
+var loopStart = null
+
 function KurGüncelle() {
   return new Promise((resolve, reject) => {
     const url = "https://www.tcmb.gov.tr/kurlar/today.xml";
@@ -127,16 +130,14 @@ function DolarTL(dolar) {
   return TL;
 }
 
-var baslangicZamani = null;
-
-client.on("ready", async () => {
+async function OnReady() {
   console.log("Güncelleniyor");
   await KurGüncelle();
   baslangicZamani = new Date();
   console.log("Ready!");
-});
+}
 
-client.on("messageCreate", async (message) => {
+async function OnMessageCreate(message) {
   if (!message.guild) return;
   if (message.author.bot) return;
   if (!message.content.startsWith(prefix)) return;
@@ -316,13 +317,39 @@ client.on("messageCreate", async (message) => {
   }
 
   //message.channel.send("My Message");
-});
+}
+
+function ConnectEvents() {
+  try {
+    client.removeListener('messageCreate', OnMessageCreate);
+    client.removeListener('ready', OnMessageCreate);
+  } 
+  catch(e) { }
+  
+  client.on("ready", OnReady)
+  client.on("messageCreate", OnMessageCreate);
+}
+
+async function Loop() {
+  
+  let suankiZaman = new Date();
+  let gecenSure = suankiZaman - loopStart;
+
+  if (gecenSure >= 1 * 60 * 1000) {
+    ConnectEvents()
+    loopStart = suankiZaman;
+  }
+  
+  setTimeout(Loop,1 * 60 *1000) // Her dakika kendini yenile
+}
 
 function ServerRequestListener(request, response) {
   response.writeHead(200);
-  response.write("OK v1");
+  response.write("OK v1.1");
   response.end();
 }
+
+Loop()
 
 client.login(process.env.token);
 
