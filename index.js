@@ -160,7 +160,7 @@ function DeleteMessage(message) {
   try {
   message.delete()
   }
-  catch {}
+  catch (e){}
 }
 
 async function OnMessageCreate(message) {
@@ -296,8 +296,8 @@ async function OnMessageCreate(message) {
     }
   } else if (data[0] == "yardım") {
     end_content = "**!robux 1000** veya **!fiyat 2.5**\nEn fazla 30000 robux alabilirsiniz.";
-  } else if (data[0] == "güncelle") {
-      
+  } else if (data[0] == "sürüm") {
+    end_content = "Yen bir sürüm."
   }
 
   if (end_content != null) {
