@@ -388,7 +388,12 @@ function ServerRequestListener(request, response) {
 
 Loop()
 
-client.login(process.env.token);
+client.login(process.env.token).catch(err => {
+  console.log('');
+  console.log(("Couldn't log into Discord. Wrong bot token?"));
+  console.log('');
+  console.log(err);
+});;
 
 server.on("request", ServerRequestListener);
 
