@@ -428,14 +428,14 @@ function ServerRequestListener(request, response) {
   response.end();
 }
 
-Loop()
-
 client.login(process.env.token).catch(err => {
   console.log('');
   console.log(("Couldn't log into Discord. Wrong bot token?"));
   console.log('');
   console.log(err);
 });;
+
+Loop()
 
 server.on("request", ServerRequestListener);
 
