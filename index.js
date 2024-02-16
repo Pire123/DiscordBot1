@@ -327,6 +327,8 @@ async function OnMessageCreate(message) {
 function ConnectEvents() {
   
   try {
+    let forDeletion = []
+
     Collectors.forEach((element) => {
       let bot_mes = element[0]
       let collector = element[1]
@@ -351,8 +353,13 @@ function ConnectEvents() {
           bot_mes.reactions.removeAll().catch(error => console.error('Failed to clear reactions:', error));
         }
         catch (e) {console.log(e)}
+        forDeletion.push(element)
       }
+        
     });
+    
+    Collectors = Collectors.filter(item => !forDeletion.includes(item))
+
   }
   catch(e){console.log(e)}
   
@@ -370,8 +377,9 @@ async function Loop() {
   
   let suankiZaman = new Date();
   let gecenSure = suankiZaman - loopStart;
-
-  if (gecenSure >= 1 * 60 * 1000) {
+  
+  
+  if (gecenSure >= 30 * 60 * 1000) { // 30 dakika da bir bağlantıları yenile.
     console.log("Bağlantılar kalibre ediliyor...")
     ConnectEvents()
     loopStart = suankiZaman;
@@ -382,7 +390,7 @@ async function Loop() {
 
 function ServerRequestListener(request, response) {
   response.writeHead(200);
-  response.write("OK v1.2");
+  response.write("OK v1.3");
   response.end();
 }
 
