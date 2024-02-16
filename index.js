@@ -131,11 +131,13 @@ function DolarTL(dolar) {
 }
 
 async function OnReady() {
-  console.log("Güncelleniyor");
+  console.log("Kur Güncelleniyor...");
   await KurGüncelle();
   baslangicZamani = new Date();
-  console.log("Ready!");
+  console.log("Hazır!");
 }
+
+var Collectors = []
 
 async function OnMessageCreate(message) {
   if (!message.guild) return;
@@ -284,8 +286,8 @@ async function OnMessageCreate(message) {
   if (end_content != null) {
     message.channel.send(end_content).then(function(bot_mes) {
        
-      let del = "❌"
-      let run_time = 60 * 60 * 1000 // 1 saat
+      let del = "🗑️"
+      let run_time = 30 * 60 * 1000 // 30 dakika
       
       setTimeout(function(){   
         bot_mes.react(del);
@@ -296,8 +298,9 @@ async function OnMessageCreate(message) {
       };
 
       let collector = bot_mes.createReactionCollector(true, { time: run_time });
-
-      collector.on('collect', (reaction, user) => {
+      let event_name = 'collect'
+      
+      collector.on(event_name, (reaction, user) => {
 
          if(user.id == message.author.id) {
            if (reaction.emoji.name == del) {
@@ -307,6 +310,8 @@ async function OnMessageCreate(message) {
            }
          }
       });
+      
+      Collectors.push([bot_mes,collector,event_name,run_time,new Date()])
       
       setTimeout(function(){   
          bot_mes.reactions.removeAll().catch(error => console.error('Failed to clear reactions:', error));
@@ -320,9 +325,40 @@ async function OnMessageCreate(message) {
 }
 
 function ConnectEvents() {
+  
   try {
-    client.removeListener('messageCreate', OnMessageCreate);
-    client.removeListener('ready', OnMessageCreate);
+    Collectors.forEach((element) => {
+      let bot_mes = element[0]
+      let collector = element[1]
+      let event_name = element[2]
+      let run_time = element[3]
+      let başlangıç = element[4]
+      
+      let şu_an = new Date()
+      
+      if ((şu_an - başlangıç) >= run_time) {
+        try {
+          collector.removeAllListeners(event_name)
+          console.log(event_name + " disconnect")
+        }
+        catch(e) {console.log(e)}
+        try {
+          collector.stop()
+          console.log("Collector Stop.")
+        }
+        catch(e){console.log(e)}
+        try {
+          bot_mes.reactions.removeAll().catch(error => console.error('Failed to clear reactions:', error));
+        }
+        catch (e) {console.log(e)}
+      }
+    });
+  }
+  catch(e){console.log(e)}
+  
+  try {
+    client.removeAllListeners('messageCreate')
+    client.removeAllListeners('ready')
   } 
   catch(e) { }
   
@@ -336,16 +372,17 @@ async function Loop() {
   let gecenSure = suankiZaman - loopStart;
 
   if (gecenSure >= 1 * 60 * 1000) {
+    console.log("Bağlantılar kalibre ediliyor...")
     ConnectEvents()
     loopStart = suankiZaman;
   }
   
-  setTimeout(Loop,1 * 60 *1000) // Her dakika kendini yenile
+  setTimeout(Loop,10 * 60 * 1000) // Her dakika kendini yenile
 }
 
 function ServerRequestListener(request, response) {
   response.writeHead(200);
-  response.write("OK v1.1");
+  response.write("OK v1.2");
   response.end();
 }
 
