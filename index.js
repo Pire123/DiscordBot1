@@ -72,6 +72,7 @@ function isBetween(number, min, max) {
 }
 
 var Kur = [];
+var KurGüncellemePeriyodu = 30 * 60 * 1000;
 
 var indirim = [
   [0, 9999, 0],
@@ -139,6 +140,21 @@ async function OnReady() {
 
 var Collectors = []
 
+function DisableCollector(collector,event_name = null) {
+     try {
+      if(event_name != null){
+        collector.removeAllListeners(event_name)
+        console.log(event_name + " disconnect")
+      }
+    }
+    catch(e) {console.log(e)}
+    try {
+      collector.stop()
+      console.log("Collector Stop.")
+    }
+    catch(e){console.log(e)}
+}
+
 async function OnMessageCreate(message) {
   if (!message.guild) return;
   if (message.author.bot) return;
@@ -151,11 +167,12 @@ async function OnMessageCreate(message) {
   let suankiZaman = new Date();
   let gecenSure = suankiZaman - baslangicZamani;
 
-  if (gecenSure >= 30 * 60 * 1000) {
+  if (gecenSure >= KurGüncellemePeriyodu) { //
     console.log("Kur güncelleniyor...");
 
     await KurGüncelle();
-
+     baslangicZamani = suankiZaman;
+    
     /*
       await KurGüncelle().then(kur => {
         console.log("Dolar:", kur[0]);
@@ -164,17 +181,13 @@ async function OnMessageCreate(message) {
           console.error("Hata:", error);
       });
       */
-
-    baslangicZamani = suankiZaman;
   }
 
   let content = message.content.substring(1);
   let data = content.split(" ");
 
   if (data.length > 2) {
-    message.channel.send(
-      "Yanlış kullanım, doğrusu: **!robux 1000** veya **!fiyat 2.5**"
-    );
+    message.channel.send("Yanlış kullanım, doğrusu: **!robux 1000** veya **!fiyat 2.5**");
     return;
   }
 
@@ -201,9 +214,7 @@ async function OnMessageCreate(message) {
       cal = Calc2(data[1], true, iskonto);
 
       if (isNaN(cal[1]) || isNaN(cal[0])) {
-        message.channel.send(
-          "Yanlış kullanım, doğrusu: **!robux 1000** veya **!fiyat 2.5**"
-        );
+        message.channel.send("Yanlış kullanım, doğrusu: **!robux 1000** veya **!fiyat 2.5**");
         return;
       }
 
@@ -255,9 +266,7 @@ async function OnMessageCreate(message) {
       }
 
       if (isNaN(cal[1]) || isNaN(cal[0])) {
-        message.channel.send(
-          "Yanlış kullanım, doğrusu: **!robux 1000** veya **!fiyat 2.5**"
-        );
+        message.channel.send("Yanlış kullanım, doğrusu: **!robux 1000** veya **!fiyat 2.5**");
         return;
       }
 
@@ -300,24 +309,47 @@ async function OnMessageCreate(message) {
       let collector = bot_mes.createReactionCollector(true, { time: run_time });
       let event_name = 'collect'
       
+      let element = [bot_mes,collector,event_name,run_time,new Date()]
+      
+      let bot_message_delete_time = 2.5 * 1000
+      
+      let deplated = false
+      
       collector.on(event_name, (reaction, user) => {
-
+        
          if(user.id == message.author.id) {
            if (reaction.emoji.name == del) {
             //console.log(`Collected ${reaction.emoji.name} from ${user.tag}`);
-            message.delete()
-            bot_mes.delete()
+           
+            bot_mes.edit("⚠️ Mesaj " + (bot_message_delete_time / 1000) + " saniye sonra silinecektir.")
+            
+            setTimeout(function(){
+              message.delete()
+              bot_mes.delete()
+              deplated = true
+              
+              DisableCollector(collector,event_name)
+              
+              try {
+                let forDeletion = [element]
+                Collectors = Collectors.filter(item => !forDeletion.includes(item))
+              }
+              catch {}
+            },bot_message_delete_time)
+             
            }
          }
       });
       
-      Collectors.push([bot_mes,collector,event_name,run_time,new Date()])
-      
       setTimeout(function(){   
-         bot_mes.reactions.removeAll().catch(error => console.error('Failed to clear reactions:', error));
-         collector.stop();
+          if (deplated == false)  {
+           bot_mes.reactions.removeAll().catch(error => console.log('Failed to clear reactions'));
+          }
+          collector.stop();
       }, run_time);
       
+      Collectors.push(element)
+  
     });
   }
 
@@ -339,20 +371,14 @@ function ConnectEvents() {
       let şu_an = new Date()
       
       if ((şu_an - başlangıç) >= run_time) {
+        
+        DisableCollector(collector,event_name)
+
         try {
-          collector.removeAllListeners(event_name)
-          console.log(event_name + " disconnect")
-        }
-        catch(e) {console.log(e)}
-        try {
-          collector.stop()
-          console.log("Collector Stop.")
-        }
-        catch(e){console.log(e)}
-        try {
-          bot_mes.reactions.removeAll().catch(error => console.error('Failed to clear reactions:', error));
+          bot_mes.reactions.removeAll().catch(error => console.log('Failed to clear reactions.'));
         }
         catch (e) {console.log(e)}
+        
         forDeletion.push(element)
       }
         
@@ -373,7 +399,7 @@ function ConnectEvents() {
   client.on("messageCreate", OnMessageCreate);
 }
 
-async function Loop() {
+function Loop() {
   
   let suankiZaman = new Date();
   let gecenSure = suankiZaman - loopStart;
@@ -385,12 +411,12 @@ async function Loop() {
     loopStart = suankiZaman;
   }
   
-  setTimeout(Loop,10 * 60 * 1000) // Her dakika kendini yenile
+  setTimeout(Loop,10 * 60 * 1000) // Her 10 dakika da bir kendini yenile
 }
 
 function ServerRequestListener(request, response) {
   response.writeHead(200);
-  response.write("OK v1.3");
+  response.write("OK v1.4");
   response.end();
 }
 
