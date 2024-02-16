@@ -155,6 +155,14 @@ function DisableCollector(collector,event_name = null) {
     catch(e){console.log(e)}
 }
 
+// Özellik message.delete()
+function DeleteMessage(message) {
+  try {
+  message.delete()
+  }
+  catch {}
+}
+
 async function OnMessageCreate(message) {
   if (!message.guild) return;
   if (message.author.bot) return;
@@ -324,8 +332,8 @@ async function OnMessageCreate(message) {
             bot_mes.edit("⚠️ Mesaj " + (bot_message_delete_time / 1000) + " saniye sonra silinecektir.")
             
             setTimeout(function(){
-              message.delete()
-              bot_mes.delete()
+              DeleteMessage(message)
+              DeleteMessage(bot_mes)
               deplated = true
               
               DisableCollector(collector,event_name)
@@ -416,7 +424,7 @@ function Loop() {
 
 function ServerRequestListener(request, response) {
   response.writeHead(200);
-  response.write("OK v1.4");
+  response.write("OK v1.5");
   response.end();
 }
 
