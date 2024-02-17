@@ -215,7 +215,7 @@ function DeleteMessage(message) {
   try {
   message.delete()
   }
-  catch (e){}
+  catch (e) { console.log(e); }
 }
 
 async function OnMessageCreate(message) {
@@ -557,7 +557,6 @@ async function OnMessageCreate(message) {
     });
   }
 
-  //message.channel.send("My Message");
 }
 
 async function ConnectEvents() {
