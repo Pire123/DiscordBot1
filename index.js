@@ -5,7 +5,7 @@ const { parseString } = require("xml2js");
 
 const TOKEN = process.env.token
 const OWNER = process.env.owner
-const WALLETS_JSON = process.env.wallets
+const WALLETS_JSON_URL = process.env.wallets
 const PORT = process.env.PORT
 
 const prefix = "!";
@@ -343,7 +343,7 @@ async function OnMessageCreate(message) {
       robux = hesaplama[1]
 
       if (isNaN(robux)) {
-        message.channel.send("Yanlış kullanım, doğrusu: **!robux 1000** veya **!fiyat 2.5**");
+        message.channel.send(yanlış_kullanım);
         return;
       }
 
@@ -362,9 +362,13 @@ async function OnMessageCreate(message) {
 
     if (data[1] == null) {
       
+      let engelle = ["important"]
+      
       let str = ""
-      let boundry = "------------=====-------------\n"
-        
+      let boundry = "------------==><===-------------\n"
+      
+      str = str + boundry
+      
       for (var coin_name in body) {
           coin_data = body[coin_name]
         
@@ -372,7 +376,7 @@ async function OnMessageCreate(message) {
         
           min_str = min_str + boundry
         
-          min_str = min_str + "-->> " + coin_name + "\n"
+          min_str = "-->> " + coin_name + "\n"
           for(var x in body[coin_name]) 
           {
             
@@ -382,17 +386,21 @@ async function OnMessageCreate(message) {
              önemli = true 
             }
 
+            if (engelle.includes(x)) {
+              continue;
+            }
+            
             if (önemli) 
-              {
-                min_str = min_str + "***"
-              }
+            {
+              min_str = min_str + "***"
+            }
 
             min_str = min_str + x + ": " + coin_data[x]
 
             if (önemli) 
-              {
-                min_str = min_str + "***"
-              }
+            {
+              min_str = min_str + "***"
+            }
 
           min_str = min_str + "\n" 
         }
@@ -418,8 +426,6 @@ async function OnMessageCreate(message) {
           console.log((coin_data.code))
           continue
         }
-
-        console.log(değişken_para,x,coin_data.code)
 
         var name_low = x.toLowerCase();
         var code = coin_data.code
@@ -457,7 +463,14 @@ async function OnMessageCreate(message) {
         str = str + "\n" 
       }
       
-      end_content = str
+      if (data[2] == null) {
+        end_content = str
+      }
+      else {
+        let istek = data[2].toLowerCase();
+        end_content = kripto_data[istek]
+      }
+      
     }
 
   } else if (data[0] == "yardım") {
@@ -586,9 +599,12 @@ async function ConnectEvents() {
   } 
   catch(e) { }
   
-  Wallets_Json = await HttpRequest(WALLETS_JSON).then((data) => {
-  return data;
-});
+   try {
+    Wallets_Json = await HttpRequest(WALLETS_JSON_URL).then((data) => { return data; });
+    console.log("Cüzdanlar yenilendi.")
+  } 
+  catch(e) { }
+  
   
   client.on("ready", OnReady)
   client.on("messageCreate", OnMessageCreate);
