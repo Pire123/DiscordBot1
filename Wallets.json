@@ -3,18 +3,22 @@
     "wallet": "Lgm88W9GH3WXAMgeV2aBgR1BYCTuwgu94z",
     "network": "Litecoin network",
     "code": "LTC",
-    "min": 0.004
+    "min": 0.004,
+    "note":"wallet ve network çok önemlidir, zorunludur."
   },
-  "Stellar Lumens": {
+  "StellarLumens": {
     "wallet": "GABFQIK63R2NETJM7T673EAMZN4RJLLGP3OFUEJU5SZVTGWUKULZJNL6",
     "network": "Stellar Network/Steallar Lumens",
     "code": "XLM",
     "memo": 340530852,
-    "min": 200
+    "min": 200,
+    "note":"wallet, network ve memo çok önemlidir, zorunludur."
   },
-  "Internet Computer": {
+  "InternetComputer": {
     "wallet": "aba99ce3d25af6d061649cce2d34cbcdda3f3bb0c51da7f5c7555f742ef10922",
+    "network": "Internet Computer/ICP",
     "code": "ICP",
-    "min": 0.00072
+    "min": 0.00072,
+    "note":"wallet ve network çok önemlidir, zorunludur."
   }
 }
