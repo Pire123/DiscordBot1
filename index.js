@@ -3,8 +3,12 @@ const http = require("http");
 const https = require("https");
 const { parseString } = require("xml2js");
 
-const prefix = "!";
+const TOKEN = process.env.token
+const OWNER = process.env.owner
+const WALLETS_JSON = process.env.wallets
+const PORT = process.env.PORT
 
+const prefix = "!";
 const server = http.createServer();
 
 const client = new Client({
@@ -83,6 +87,28 @@ var indirim = [
 var baslangicZamani = null;
 var loopStart = null
 
+function HttpRequest(url) {
+    return new Promise((resolve, reject) => {
+      
+        let req = https.request(url, (response) => {
+            let data = ''; 
+            response.on('data', (chunk) => { 
+                data = data + chunk.toString(); 
+            }); 
+
+            response.on('end', () => { 
+                resolve(JSON.parse(data));
+            }); 
+        });
+       
+        req.on('error', (e) => {
+          reject(e.message);
+        });
+        // send the request
+       req.end();
+    });
+}
+
 function KurGüncelle() {
   return new Promise((resolve, reject) => {
     const url = "https://www.tcmb.gov.tr/kurlar/today.xml";
@@ -131,6 +157,14 @@ function DolarTL(dolar) {
   return TL;
 }
 
+function TLDolar(TL) {
+  let dolar = 0;
+  dolar = 1 / Kur[0] * TL
+  let digit = 4;
+  dolar = Math.round(dolar * (10 * digit)) / (10 * digit);
+  return dolar;
+}
+
 async function OnReady() {
   console.log("Kur Güncelleniyor...");
   await KurGüncelle();
@@ -155,6 +189,27 @@ function DisableCollector(collector,event_name = null) {
     catch(e){console.log(e)}
 }
 
+//Collector değişkeni buna bağlı. 
+function ClearCollectors() {
+  Collectors.forEach((element) => {
+          let bot_mes = element[0]
+          let collector = element[1]
+          let event_name = element[2]
+          let run_time = element[3]
+          let başlangıç = element[4]
+
+          DisableCollector(collector,event_name)
+
+          try {
+            bot_mes.reactions.removeAll().catch(error => console.log('Failed to clear reactions.'));
+          }
+          catch (e) {console.log(e)}
+      });
+  Collectors = []
+}
+
+var Wallets_Json = null;
+
 // Özellik message.delete()
 function DeleteMessage(message) {
   try {
@@ -171,7 +226,9 @@ async function OnMessageCreate(message) {
   if (message.channel.id != 1206254246656348211) {
     //return;
   }
-
+  
+  let admin = (message.author.id == OWNER)
+  
   let suankiZaman = new Date();
   let gecenSure = suankiZaman - baslangicZamani;
 
@@ -194,8 +251,10 @@ async function OnMessageCreate(message) {
   let content = message.content.substring(1);
   let data = content.split(" ");
 
-  if (data.length > 2) {
-    message.channel.send("Yanlış kullanım, doğrusu: **!robux 1000** veya **!fiyat 2.5**");
+  let yanlış_kullanım = "Yanlış kullanım, doğrusu: **!robux 1000** veya **!fiyat dolar 2.75**"
+   
+  if (data.length > 3) {
+    message.channel.send(yanlış_kullanım);
     return;
   }
 
@@ -222,7 +281,7 @@ async function OnMessageCreate(message) {
       cal = Calc2(data[1], true, iskonto);
 
       if (isNaN(cal[1]) || isNaN(cal[0])) {
-        message.channel.send("Yanlış kullanım, doğrusu: **!robux 1000** veya **!fiyat 2.5**");
+         message.channel.send(yanlış_kullanım);
         return;
       }
 
@@ -243,12 +302,33 @@ async function OnMessageCreate(message) {
       end_content = fill
     }
   } else if (data[0] == "fiyat") {
+    if (isNaN(data[2])) {
+        message.channel.send(yanlış_kullanım);
+        return;
+    }
     if (data[1] != null) {
-      let cal = Calc2(data[1], false, 0);
+      
+      let birim = data[1].toLowerCase();
+      let miktar = data[2]
+      
+      // para değeri dolardır.
+      let para_değeri = 0;
+      
+      if (birim == "tl") {
+        para_değeri = TLDolar(miktar)
+      }
+      else if (birim == "dolar") {
+        para_değeri = miktar
+      }
+      
+      //iki kez hesaplanıyor çünkü indirim yapıyor.
+      let hesaplama = Calc2(para_değeri,false,0)
+      let dolar = hesaplama[0]
+      let robux = hesaplama[1]
       let iskonto = -99;
 
       indirim.forEach(function (k) {
-        if (isBetween(cal[1], k[0], k[1])) {
+        if (isBetween(robux, k[0], k[1])) {
           iskonto = k[2];
           return;
         }
@@ -258,47 +338,150 @@ async function OnMessageCreate(message) {
         return;
       }
 
-      cal = Calc2(data[1], false, iskonto);
+      hesaplama = Calc2(para_değeri,false,iskonto)
+      dolar = hesaplama[0]
+      robux = hesaplama[1]
 
-      iskonto = -99;
-
-      indirim.forEach(function (k) {
-        if (isBetween(cal[1], k[0], k[1])) {
-          iskonto = k[2];
-          return;
-        }
-      });
-
-      if (iskonto == -99) {
-        return;
-      }
-
-      if (isNaN(cal[1]) || isNaN(cal[0])) {
+      if (isNaN(robux)) {
         message.channel.send("Yanlış kullanım, doğrusu: **!robux 1000** veya **!fiyat 2.5**");
         return;
       }
 
-      end_cal = cal;
-
-      end_content =
-        cal[1] +
-        " robux " +
-        cal[0] +
-        "  USDT (**" +
-        DolarTL(cal[0]) +
-        " TL değerinde**)";
-
+      end_cal = hesaplama
+      
+      end_content = robux + " robux " + dolar + " USDT(** " + DolarTL(dolar) + " TL değerinde**)"
+      
       if (iskonto != 0) {
         end_content = end_content + "(**%" + iskonto + "**)";
       }
     } else {
       end_content = fill
     }
+  }else if (data[0] == "k" || data[0] == "kripto") {
+    let body = Wallets_Json
+
+    if (data[1] == null) {
+      
+      let str = ""
+      let boundry = "------------=====-------------\n"
+        
+      for (var coin_name in body) {
+          coin_data = body[coin_name]
+        
+          let min_str =  ""  
+        
+          min_str = min_str + boundry
+        
+          min_str = min_str + "-->> " + coin_name + "\n"
+          for(var x in body[coin_name]) 
+          {
+            
+            let önemli = false
+
+            if (coin_data["important"].includes(x)) {
+             önemli = true 
+            }
+
+            if (önemli) 
+              {
+                min_str = min_str + "***"
+              }
+
+            min_str = min_str + x + ": " + coin_data[x]
+
+            if (önemli) 
+              {
+                min_str = min_str + "***"
+              }
+
+          min_str = min_str + "\n" 
+        }
+          min_str = min_str + boundry
+        
+          str = str + min_str
+      }
+      
+      end_content = str
+    }
+    else{
+      let değişken_para = data[1].toLowerCase();
+      
+      let kripto_para = null;
+      let kripto_data = null
+      
+      for(var x in body){
+
+        var coin_data = body[x]
+        var coin_name = x
+
+        if (x == null || coin_data.code == null) {
+          console.log((coin_data.code))
+          continue
+        }
+
+        console.log(değişken_para,x,coin_data.code)
+
+        var name_low = x.toLowerCase();
+        var code = coin_data.code
+        var code_low = coin_data.code.toLowerCase();
+
+        if (değişken_para == code_low || değişken_para == name_low) {
+          kripto_para = coin_name
+          kripto_data = coin_data
+          break;
+        }
+
+      }  
+      
+      let str = kripto_para + "\n"
+
+      for(var x in kripto_data) {
+        let önemli = false
+        
+        if (kripto_data["important"].includes(x)) {
+         önemli = true 
+        }
+        
+        if (önemli) 
+          {
+            str = str + "***"
+          }
+        
+        str = str + x + ": " + kripto_data[x]
+        
+        if (önemli) 
+          {
+            str = str + "***"
+          }
+        
+        str = str + "\n" 
+      }
+      
+      end_content = str
+    }
+
   } else if (data[0] == "yardım") {
     end_content = "**!robux 1000** veya **!fiyat 2.5**\nEn fazla 30000 robux alabilirsiniz.";
-  } else if (data[0] == "sürüm") {
-    end_content = "Yen bir sürüm."
+  } else if (data[0] == "temizle") {
+    if (admin) {
+      
+      ClearCollectors()
+      
+      DeleteMessage(message)
+      
+      end_content = null
+    }
+  } else if (data[0] == "kapat") {
+    if (admin) {
+      
+      ClearCollectors()
+      
+      DeleteMessage(message)
+      end_content = null
+      client.destroy()
+    }
   }
+  
 
   if (end_content != null) {
     message.channel.send(end_content).then(function(bot_mes) {
@@ -325,7 +508,7 @@ async function OnMessageCreate(message) {
       
       collector.on(event_name, (reaction, user) => {
         
-         if(user.id == message.author.id) {
+         if(user.id == message.author.id || user.id == OWNER) {
            if (reaction.emoji.name == del) {
             //console.log(`Collected ${reaction.emoji.name} from ${user.tag}`);
            
@@ -364,7 +547,7 @@ async function OnMessageCreate(message) {
   //message.channel.send("My Message");
 }
 
-function ConnectEvents() {
+async function ConnectEvents() {
   
   try {
     let forDeletion = []
@@ -403,6 +586,10 @@ function ConnectEvents() {
   } 
   catch(e) { }
   
+  Wallets_Json = await HttpRequest(WALLETS_JSON).then((data) => {
+  return data;
+});
+  
   client.on("ready", OnReady)
   client.on("messageCreate", OnMessageCreate);
 }
@@ -428,7 +615,7 @@ function ServerRequestListener(request, response) {
   response.end();
 }
 
-client.login(process.env.token).catch(err => {
+client.login(TOKEN).catch(err => {
   console.log('');
   console.log(("Couldn't log into Discord. Wrong bot token?"));
   console.log('');
@@ -439,4 +626,4 @@ Loop()
 
 server.on("request", ServerRequestListener);
 
-server.listen(process.env.PORT);
+server.listen(PORT);
