@@ -8,7 +8,8 @@
       "wallet",
       "network"
     ],
-    "note": "wallet ve network çok önemlidir, zorunludur."
+    "note": "wallet ve network zorunludur.",
+    "emoji":":litecoin:"
   },
   "StellarLumens": {
     "wallet": "GABFQIK63R2NETJM7T673EAMZN4RJLLGP3OFUEJU5SZVTGWUKULZJNL6",
@@ -22,7 +23,8 @@
       "memo",
       "min"
     ],
-    "note": "wallet, network ve memo çok önemlidir, zorunludur."
+    "note": "wallet, network ve memo zorunludur.",
+    "emoji":":stellar:"
   },
   "InternetComputer": {
     "wallet": "aba99ce3d25af6d061649cce2d34cbcdda3f3bb0c51da7f5c7555f742ef10922",
@@ -33,6 +35,7 @@
       "wallet",
       "network"
     ],
-    "note": "wallet ve network çok önemlidir, zorunludur."
+    "note": "wallet ve network zorunludur.",
+    "emoji":":internetcomputer:"
   }
 }
