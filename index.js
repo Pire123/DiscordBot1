@@ -29,6 +29,7 @@ const client = new Client({
   ],
 });
 const kDeğeri = 2.75;
+var Client_Closed = false
 
 function Calc2(İtibariDeğer, ters = false, iskonto = 0) {
   /*
@@ -175,18 +176,15 @@ async function OnReady() {
 var Collectors = []
 
 function DisableCollector(collector,event_name = null) {
-     try {
-      if(event_name != null){
-        collector.removeAllListeners(event_name)
-        console.log(event_name + " disconnect")
-      }
+
+    if(event_name != null) {
+      collector.removeAllListeners(event_name)
+      console.log(event_name + " disconnect")
     }
-    catch(e) {console.log(e)}
-    try {
-      collector.stop()
-      console.log("Collector Stop.")
-    }
-    catch(e){console.log(e)}
+  
+    collector.stop()
+    console.log("Collector Stop.")
+
 }
 
 //Collector değişkeni buna bağlı. 
@@ -199,11 +197,8 @@ function ClearCollectors() {
           let başlangıç = element[4]
 
           DisableCollector(collector,event_name)
+          bot_mes.reactions.removeAll().catch(error => console.log('Failed to clear reactions.'));
 
-          try {
-            bot_mes.reactions.removeAll().catch(error => console.log('Failed to clear reactions.'));
-          }
-          catch (e) {console.log(e)}
       });
   Collectors = []
 }
@@ -212,10 +207,9 @@ var Wallets_Json = null;
 
 // Özellik message.delete()
 function DeleteMessage(message) {
-  try {
-  message.delete()
-  }
-  catch (e) { console.log(e); }
+  message.delete().catch(error => {
+    console.log('Mesajı silerken bir hata oluştu:', error);
+  });
 }
 
 async function OnMessageCreate(message) {
@@ -362,7 +356,7 @@ async function OnMessageCreate(message) {
 
     if (data[1] == null) {
       
-      let engelle = ["important"]
+      let engelle = ["important","emoji"]
       
       let str = ""
       let boundry = "------------==><===-------------\n"
@@ -390,16 +384,10 @@ async function OnMessageCreate(message) {
               continue;
             }
             
-            if (önemli) 
-            {
-              min_str = min_str + "***"
-            }
-
             min_str = min_str + x + ": " + coin_data[x]
 
-            if (önemli) 
-            {
-              min_str = min_str + "***"
+            if (önemli) {
+              min_str = min_str + "⚠️"
             }
 
           min_str = min_str + "\n" 
@@ -409,7 +397,8 @@ async function OnMessageCreate(message) {
           str = str + min_str
       }
       
-      end_content = str
+      end_content = str + "\n" + "**Yanında ünlem bulunanların yanlış yazılması geri dönülemez bir hataya sebep olur.**"
+      
     }
     else{
       let değişken_para = data[1].toLowerCase();
@@ -439,42 +428,46 @@ async function OnMessageCreate(message) {
 
       }  
       
-      let str = kripto_para + "\n"
+      if (kripto_para != null) {
+        let str = kripto_para  + "\n"
 
-      for(var x in kripto_data) {
-        let önemli = false
-        
-        if (kripto_data["important"].includes(x)) {
-         önemli = true 
+        for(var x in kripto_data) {
+          let önemli = false
+
+          if (kripto_data["important"].includes(x)) {
+           önemli = true 
+          }
+
+          if (önemli) 
+            {
+              str = str + "***"
+            }
+
+          str = str + x + ": " + kripto_data[x]
+
+          if (önemli) 
+            {
+              str = str + "***"
+            }
+
+          str = str + "\n" 
         }
-        
-        if (önemli) 
-          {
-            str = str + "***"
-          }
-        
-        str = str + x + ": " + kripto_data[x]
-        
-        if (önemli) 
-          {
-            str = str + "***"
-          }
-        
-        str = str + "\n" 
-      }
-      
-      if (data[2] == null) {
-        end_content = str
+
+        if (data[2] == null) {
+          end_content = str
+        }
+        else {
+          let istek = data[2].toLowerCase();
+          end_content = String(kripto_data[istek])
+        }
       }
       else {
-        let istek = data[2].toLowerCase();
-        end_content = kripto_data[istek]
+          end_content = "**" + değişken_para + "** diye bir kripto para sistemimizde yok."
       }
-      
     }
 
   } else if (data[0] == "yardım") {
-    end_content = "**!robux 1000** veya **!fiyat 2.5**\nEn fazla 30000 robux alabilirsiniz.";
+    end_content = "**!robux 1000** veya **!fiyat dolar 2.5**\nEn fazla 30000 robux alabilirsiniz.";
   } else if (data[0] == "temizle") {
     if (admin) {
       
@@ -492,11 +485,18 @@ async function OnMessageCreate(message) {
       DeleteMessage(message)
       end_content = null
       client.destroy()
+      Client_Closed = true
+      console.log("Bot kapandı.")
     }
   }
   
-
+  
   if (end_content != null) {
+    
+    if (typeof end_content !== 'string') {
+      end_content = "Yazılımsal hata. Kod: 1"
+    }
+    
     message.channel.send(end_content).then(function(bot_mes) {
        
       let del = "🗑️"
@@ -577,11 +577,8 @@ async function ConnectEvents() {
         
         DisableCollector(collector,event_name)
 
-        try {
-          bot_mes.reactions.removeAll().catch(error => console.log('Failed to clear reactions.'));
-        }
-        catch (e) {console.log(e)}
-        
+        bot_mes.reactions.removeAll().catch(error => console.log('Failed to clear reactions.'));
+
         forDeletion.push(element)
       }
         
@@ -592,14 +589,12 @@ async function ConnectEvents() {
   }
   catch(e){console.log(e)}
   
+
+  client.removeAllListeners('messageCreate')
+  client.removeAllListeners('ready')
+
   try {
-    client.removeAllListeners('messageCreate')
-    client.removeAllListeners('ready')
-  } 
-  catch(e) { }
-  
-   try {
-    Wallets_Json = await HttpRequest(WALLETS_JSON_URL).then((data) => { return data; });
+    Wallets_Json = await HttpRequest(WALLETS_JSON_URL).then((data) => { return data; })
     console.log("Cüzdanlar yenilendi.")
   } 
   catch(e) { }
@@ -626,7 +621,17 @@ function Loop() {
 
 function ServerRequestListener(request, response) {
   response.writeHead(200);
-  response.write("OK v1.5");
+  
+  var str = "";
+  
+  if (Client_Closed) {
+    str = "BOT KAPALI."
+  }
+  else {
+    str = "OK"
+  }
+  
+  response.write(str);
   response.end();
 }
 
