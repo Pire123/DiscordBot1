@@ -6,6 +6,7 @@ const { parseString } = require("xml2js");
 const TOKEN = process.env.token
 const OWNER = process.env.owner
 const WALLETS_JSON_URL = process.env.wallets
+const PRICE_JSON_URL = process.env.price
 const PORT = process.env.PORT
 
 const prefix = "!";
@@ -28,8 +29,11 @@ const client = new Client({
     Partials.Reaction,
   ],
 });
-const kDeğeri = 2.75;
+var kDeğeri = 2.75 // 2,75 Tether US
 var Client_Closed = false
+
+var Wallets_Json = null;
+var Price_Json = null;
 
 function Calc2(İtibariDeğer, ters = false, iskonto = 0) {
   /*
@@ -202,8 +206,6 @@ function ClearCollectors() {
       });
   Collectors = []
 }
-
-var Wallets_Json = null;
 
 // Özellik message.delete()
 function DeleteMessage(message) {
@@ -477,6 +479,11 @@ async function OnMessageCreate(message) {
       
       end_content = null
     }
+  }  else if (data[0] == "güncelle" ) {
+    if (admin) {
+      Loop(true)
+      end_content = "Fiyatlar birazdan güncellenecektir."
+    }
   } else if (data[0] == "kapat") {
     if (admin) {
       
@@ -599,24 +606,33 @@ async function ConnectEvents() {
   } 
   catch(e) { }
   
+  try {
+    Price_Json = await HttpRequest(PRICE_JSON_URL).then((data) => { return data; })
+    console.log("Robux fiyatı yenilendi.")
+    kDeğeri = Price_Json["Robux"]["price"]
+  } 
+  catch(e) { console.log(e) }
+  
   
   client.on("ready", OnReady)
   client.on("messageCreate", OnMessageCreate);
 }
 
-function Loop() {
+function Loop(bypass = false) {
   
   let suankiZaman = new Date();
   let gecenSure = suankiZaman - loopStart;
   
   
-  if (gecenSure >= 30 * 60 * 1000) { // 30 dakika da bir bağlantıları yenile.
+  if (gecenSure >= 30 * 60 * 1000 || bypass == true) { // 30 dakika da bir bağlantıları yenile.
     console.log("Bağlantılar kalibre ediliyor...")
     ConnectEvents()
     loopStart = suankiZaman;
   }
   
-  setTimeout(Loop,10 * 60 * 1000) // Her 10 dakika da bir kendini yenile
+  if (!bypass) {
+    setTimeout(Loop,10 * 60 * 1000) // Her 10 dakika da bir kendini yenile
+  }
 }
 
 function ServerRequestListener(request, response) {
