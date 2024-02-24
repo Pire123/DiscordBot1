@@ -261,7 +261,7 @@ async function OnMessageCreate(message) {
   if (data[0] == "robux") {
     if (data[1] != null) {
       let cal = Calc2(data[1], true, 0);
-      let iskonto = -99;
+      let iskonto = 0;
 
       indirim.forEach(function (k) {
         if (isBetween(cal[1], k[0], k[1])) {
@@ -269,10 +269,6 @@ async function OnMessageCreate(message) {
           return;
         }
       });
-
-      if (iskonto == -99) {
-        return;
-      }
 
       cal = Calc2(data[1], true, iskonto);
 
@@ -321,7 +317,7 @@ async function OnMessageCreate(message) {
       let hesaplama = Calc2(para_değeri,false,0)
       let dolar = hesaplama[0]
       let robux = hesaplama[1]
-      let iskonto = -99;
+      let iskonto = 0;
 
       indirim.forEach(function (k) {
         if (isBetween(robux, k[0], k[1])) {
@@ -329,11 +325,7 @@ async function OnMessageCreate(message) {
           return;
         }
       });
-
-      if (iskonto == -99) {
-        return;
-      }
-
+      
       hesaplama = Calc2(para_değeri,false,iskonto)
       dolar = hesaplama[0]
       robux = hesaplama[1]
