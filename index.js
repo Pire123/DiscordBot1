@@ -88,6 +88,7 @@ var indirim = [
   [10000, 19999, 5],
   [20000, 30000, 10],
 ];
+var indirim_uygula = true;
 
 var baslangicZamani = null;
 var loopStart = null
@@ -157,7 +158,7 @@ function KurGüncelle() {
 function DolarTL(dolar) {
   let TL = 0;
   TL = Kur[0] * dolar;
-  let digit = 2;
+  let digit = 1/10;
   TL = Math.ceil(TL * (10 * digit)) / (10 * digit);
   return TL;
 }
@@ -183,11 +184,11 @@ function DisableCollector(collector,event_name = null) {
 
     if(event_name != null) {
       collector.removeAllListeners(event_name)
-      console.log(event_name + " disconnect")
+      //console.log(event_name + " disconnect")
     }
   
     collector.stop()
-    console.log("Collector Stop.")
+    //console.log("Collector Stop.")
 
 }
 
@@ -248,7 +249,8 @@ async function OnMessageCreate(message) {
   let data = content.split(" ");
 
   let yanlış_kullanım = "Yanlış kullanım, doğrusu: **!robux 1000** veya **!fiyat dolar 2.75**"
-   
+  let kripto_yanlış_kullanım = "Yanlış kullanım, örnek kullanım: **!kripto ltc wallet**"
+  
   if (data.length > 3) {
     message.channel.send(yanlış_kullanım);
     return;
@@ -270,6 +272,10 @@ async function OnMessageCreate(message) {
         }
       });
 
+      if (indirim_uygula == false) {
+        iskonto = 0
+      }
+      
       cal = Calc2(data[1], true, iskonto);
 
       if (isNaN(cal[1]) || isNaN(cal[0])) {
@@ -326,6 +332,10 @@ async function OnMessageCreate(message) {
         }
       });
       
+      if (indirim_uygula == false) {
+        iskonto = 0
+      }
+      
       hesaplama = Calc2(para_değeri,false,iskonto)
       dolar = hesaplama[0]
       robux = hesaplama[1]
@@ -373,7 +383,7 @@ async function OnMessageCreate(message) {
             if (coin_data["important"].includes(x)) {
              önemli = true 
             }
-
+            
             if (engelle.includes(x)) {
               continue;
             }
@@ -453,6 +463,10 @@ async function OnMessageCreate(message) {
         else {
           let istek = data[2].toLowerCase();
           end_content = String(kripto_data[istek])
+          
+          if (end_content == "undefined") {
+            end_content = kripto_yanlış_kullanım
+          }
         }
       }
       else {
@@ -462,7 +476,35 @@ async function OnMessageCreate(message) {
 
   } else if (data[0] == "yardım") {
     end_content = "**!robux 1000** veya **!fiyat dolar 2.5**\nEn fazla 30000 robux alabilirsiniz.";
-  } else if (data[0] == "temizle") {
+  
+  }else if(data[0] == "iskonto") {
+    if(admin) {
+      let durum = null
+      
+      
+      let end_str = "";
+      
+      if (data[1] != null) {
+        durum = String(data[1]).toLowerCase();
+      }
+      
+      if (durum != null) {
+        if (durum == "true") {
+          indirim_uygula = true
+        }
+        else if(durum == "false") {
+          indirim_uygula = false
+        }
+        else {
+          end_str = "Yanlış kullanım. Kod: 2" + "\n"
+        }
+      }
+      
+      end_str = end_str + String(indirim_uygula)
+      end_content = end_str
+    }
+  }
+  else if (data[0] == "temizle") {
     if (admin) {
       
       ClearCollectors()
