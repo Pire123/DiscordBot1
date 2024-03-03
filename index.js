@@ -90,6 +90,8 @@ var indirim = [
 ];
 var indirim_uygula = true;
 
+var YARDIM_YAZISI = "Kullanabileceğiniz komutlar:\n---> **!robux {miktar}** ile istenilen miktarda robuxun ne kadar ettiğini,\n---> **!fiyat {para birimi} {miktar}** ile para birimi miktarının ne kadar robux ettiğini,\n---> **!kripto {kripto adı} {özelliği}** ile aktif kripto ödeme yöntemlerine,\n erişebilirsiniz.\n\nÖrnek Kullanımlar:\n---> **!robux 2500** = 2500 robuxun değeri,\n---> **!fiyat tl 500** = 500 TL'ye ne kadar robux geliyorsa,\n---> **!fiyat dolar 20** = 20 dolara ne kadar robux geliyorsa,\n---> **!kripto** ile tüm cüzdanlara,\n---> **!kripto ltc** ile Litecoin bilgilerine,\n---> **!kripto ltc note** ile Litecoin için nelere ihtiyacınız olduğunu bilgisine,\n---> **!kripto ltc wallet** ile de Litecoin ödeme cüzdan adresine ulaşabilirsiniz."
+
 var baslangicZamani = null;
 var loopStart = null
 
@@ -475,7 +477,7 @@ async function OnMessageCreate(message) {
     }
 
   } else if (data[0] == "yardım") {
-    end_content = "**!robux 1000** veya **!fiyat dolar 2.5**\nEn fazla 30000 robux alabilirsiniz.";
+    end_content = YARDIM_YAZISI
   
   }else if(data[0] == "iskonto") {
     if(admin) {
