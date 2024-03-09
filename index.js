@@ -83,11 +83,7 @@ function isBetween(number, min, max) {
 var Kur = [];
 var KurGüncellemePeriyodu = 30 * 60 * 1000;
 
-var indirim = [
-  [0, 9999, 0],
-  [10000, 19999, 5],
-  [20000, 30000, 10],
-];
+var indirim = []
 var indirim_uygula = true;
 
 var YARDIM_YAZISI = "Kullanabileceğiniz komutlar:\n---> **!robux {miktar}** ile istenilen miktarda robuxun ne kadar ettiğini,\n---> **!fiyat {para birimi} {miktar}** ile para birimi miktarının ne kadar robux ettiğini,\n---> **!kripto {kripto adı} {özelliği}** ile aktif kripto ödeme yöntemlerine,\n erişebilirsiniz.\n\nÖrnek Kullanımlar:\n---> **!robux 2500** = 2500 robuxun değeri,\n---> **!fiyat tl 500** = 500 TL'ye ne kadar robux geliyorsa,\n---> **!fiyat dolar 20** = 20 dolara ne kadar robux geliyorsa,\n---> **!kripto** ile tüm cüzdanlara,\n---> **!kripto ltc** ile Litecoin bilgilerine,\n---> **!kripto ltc note** ile Litecoin için nelere ihtiyacınız olduğunu bilgisine,\n---> **!kripto ltc wallet** ile de Litecoin ödeme cüzdan adresine ulaşabilirsiniz."
@@ -171,6 +167,21 @@ function TLDolar(TL) {
   let digit = 4;
   dolar = Math.round(dolar * (10 * digit)) / (10 * digit);
   return dolar;
+}
+
+function MathCeil(V,digit = 2) {
+  V = Math.ceil(V * (10 * digit)) / (10 * digit);
+  return V;
+}
+
+function BorsaKomisyonu(Fiyat_Dolar) {
+  // Her 31,40 dolarda 1,60 dolar komsiyon alıyor. Bu, %5.1 komisyon eder.
+  
+  return Fiyat_Dolar / 100 * 5.25
+}
+
+function TextDolarTL(dolar) {
+  return "(**" + DolarTL(dolar) + " TL değerinde**)"
 }
 
 async function OnReady() {
@@ -264,40 +275,61 @@ async function OnMessageCreate(message) {
 
   if (data[0] == "robux") {
     if (data[1] != null) {
-      let cal = Calc2(data[1], true, 0);
+
+      //iki kez hesaplanıyor çünkü indirim yapıyor.
+      let miktar = data[1]
+      let hesaplama = Calc2(miktar,true,0)
+      let dolar = hesaplama[0]
+      let robux = hesaplama[1]
       let iskonto = 0;
 
-      indirim.forEach(function (k) {
-        if (isBetween(cal[1], k[0], k[1])) {
-          iskonto = k[2];
-          return;
-        }
-      });
-
-      if (indirim_uygula == false) {
-        iskonto = 0
+      if (indirim_uygula == true) { 
+        indirim.forEach(function (k) {
+          if (isBetween(robux, k[0], k[1])) {
+            iskonto = k[2];
+            return;
+          }
+        });
       }
-      
-      cal = Calc2(data[1], true, iskonto);
+      else {
+         iskonto = 0
+      }
+        
+      hesaplama = Calc2(robux,true,iskonto)
+      dolar = hesaplama[0]
+      robux = hesaplama[1]
 
-      if (isNaN(cal[1]) || isNaN(cal[0])) {
-         message.channel.send(yanlış_kullanım);
+      if (isNaN(robux)) {
+        message.channel.send(yanlış_kullanım);
         return;
       }
 
-      end_cal = cal;
-
-      end_content =
-        cal[1] +
-        " robux " +
-        cal[0] +
-        "  USDT (**" +
-        DolarTL(cal[0]) +
-        " TL değerinde**)";
-
-      if (iskonto != 0) {
-        end_content = end_content + "(**%" + iskonto + "**)";
+      end_cal = hesaplama
+      
+      let Borsa_Komsiyonu = MathCeil(BorsaKomisyonu(dolar))
+      
+      let toplam = (dolar + Borsa_Komsiyonu)
+      
+      let str = "Robux: " + robux + " robux"
+      
+      if (dolar > 0) {
+        str = str + "\n" + "Robux değeri: " + dolar + " USDT" + TextDolarTL(dolar)
       }
+      
+      if (Borsa_Komsiyonu != 0) {
+        str = str + "\n" + "Borsa komisyonu: " + Borsa_Komsiyonu + " USDT" + TextDolarTL(Borsa_Komsiyonu)
+      }
+      
+      if (iskonto != 0) {
+        str = str + "\n" + "İndirim oranı: " +  "%**" + iskonto + "**"
+      }
+      
+      str = str + "\n---------------------\n"
+      
+      str = str + "Toplam ücret : " + toplam + " USDT" + TextDolarTL(toplam)
+      
+      end_content = str
+      
     } else {
       end_content = fill
     }
@@ -320,6 +352,10 @@ async function OnMessageCreate(message) {
       else if (birim == "dolar") {
         para_değeri = miktar
       }
+      else {
+        message.channel.send(yanlış_kullanım);
+        return;
+      }
       
       //iki kez hesaplanıyor çünkü indirim yapıyor.
       let hesaplama = Calc2(para_değeri,false,0)
@@ -327,17 +363,19 @@ async function OnMessageCreate(message) {
       let robux = hesaplama[1]
       let iskonto = 0;
 
-      indirim.forEach(function (k) {
-        if (isBetween(robux, k[0], k[1])) {
-          iskonto = k[2];
-          return;
-        }
-      });
       
-      if (indirim_uygula == false) {
-        iskonto = 0
+      if (indirim_uygula == true) { 
+        indirim.forEach(function (k) {
+          if (isBetween(robux, k[0], k[1])) {
+            iskonto = k[2];
+            return;
+          }
+        });
       }
-      
+      else {
+         iskonto = 0
+      }
+        
       hesaplama = Calc2(para_değeri,false,iskonto)
       dolar = hesaplama[0]
       robux = hesaplama[1]
@@ -349,11 +387,29 @@ async function OnMessageCreate(message) {
 
       end_cal = hesaplama
       
-      end_content = robux + " robux " + dolar + " USDT(** " + DolarTL(dolar) + " TL değerinde**)"
+      let Borsa_Komsiyonu = MathCeil(BorsaKomisyonu(dolar))
+      
+      let toplam = (dolar + Borsa_Komsiyonu)
+      
+      let str = "Robux: " + robux + " robux"
+      
+      if (dolar > 0) {
+        str = str + "\n" + "Robux değeri: " + dolar + " USDT" + TextDolarTL(dolar)
+      }
+      
+      if (Borsa_Komsiyonu != 0) {
+        str = str + "\n" + "Borsa komisyonu: " + Borsa_Komsiyonu + " USDT" + TextDolarTL(Borsa_Komsiyonu)
+      }
       
       if (iskonto != 0) {
-        end_content = end_content + "(**%" + iskonto + "**)";
+        str = str + "\n" + "İndirim oranı: " +  "%**" + iskonto + "**"
       }
+      
+      str = str + "\n---------------------\n"
+      
+      str = str + "Toplam ücret : " + toplam + "USDT" + TextDolarTL(toplam)
+      
+      end_content = str
     } else {
       end_content = fill
     }
@@ -644,8 +700,33 @@ async function ConnectEvents() {
   
   try {
     Price_Json = await HttpRequest(PRICE_JSON_URL).then((data) => { return data; })
-    console.log("Robux fiyatı yenilendi.")
+    
     kDeğeri = Price_Json["Robux"]["price"]
+    
+    let k_indirim = []
+    
+    for (var value in Price_Json["Sale"]) {
+      
+      if (value == "make") {
+         indirim_uygula = String(Price_Json["Sale"][value]).toLowerCase() == "true"
+      }
+      
+      if (isNaN(parseInt(value)) == false) {
+        
+        let data = Price_Json["Sale"][value]
+        
+        let min = parseInt(data[0])
+        let max = parseInt(data[1])
+        let sale_value = parseInt(value)
+        
+        k_indirim.push([min,max,sale_value])
+      }    
+      
+      indirim = k_indirim
+      
+    }
+    
+    console.log("Robux fiyatı yenilendi.")
   } 
   catch(e) { console.log(e) }
   
