@@ -81,15 +81,13 @@ function isBetween(number, min, max) {
 }
 
 var Kur = [];
-var KurGüncellemePeriyodu = 30 * 60 * 1000;
+var LoopGüncellemePeriyodu = 30 * 60 * 1000;
+var loopStart = null
 
 var indirim = []
 var indirim_uygula = true;
 
 var YARDIM_YAZISI = "Kullanabileceğiniz komutlar:\n---> **!robux {miktar}** ile istenilen miktarda robuxun ne kadar ettiğini,\n---> **!fiyat {para birimi} {miktar}** ile para birimi miktarının ne kadar robux ettiğini,\n---> **!kripto {kripto adı} {özelliği}** ile aktif kripto ödeme yöntemlerine,\n erişebilirsiniz.\n\nÖrnek Kullanımlar:\n---> **!robux 2500** = 2500 robuxun değeri,\n---> **!fiyat tl 500** = 500 TL'ye ne kadar robux geliyorsa,\n---> **!fiyat dolar 20** = 20 dolara ne kadar robux geliyorsa,\n---> **!kripto** ile tüm cüzdanlara,\n---> **!kripto ltc** ile Litecoin bilgilerine,\n---> **!kripto ltc note** ile Litecoin için nelere ihtiyacınız olduğunu bilgisine,\n---> **!kripto ltc wallet** ile de Litecoin ödeme cüzdan adresine ulaşabilirsiniz."
-
-var baslangicZamani = null;
-var loopStart = null
 
 function HttpRequest(url) {
     return new Promise((resolve, reject) => {
@@ -115,7 +113,7 @@ function HttpRequest(url) {
 
 function KurGüncelle() {
   return new Promise((resolve, reject) => {
-    const url = "https://www.tcmb.gov.tr/kurlar/today.xml";
+    let url = "https://www.tcmb.gov.tr/kurlar/today.xml";
     https
       .get(url, (res) => {
         let data = "";
@@ -128,12 +126,12 @@ function KurGüncelle() {
               reject(err);
             } else {
               try {
-                const dolar = parseFloat(
+                let dolar = parseFloat(
                   result.Tarih_Date.Currency.find(
                     (item) => item.$.Kod === "USD"
                   ).ForexSelling[0]
                 );
-                const euro = parseFloat(
+                let euro = parseFloat(
                   result.Tarih_Date.Currency.find(
                     (item) => item.$.Kod === "EUR"
                   ).ForexSelling[0]
@@ -238,25 +236,6 @@ async function OnMessageCreate(message) {
   }
   
   let admin = (message.author.id == OWNER)
-  
-  let suankiZaman = new Date();
-  let gecenSure = suankiZaman - baslangicZamani;
-
-  if (gecenSure >= KurGüncellemePeriyodu) { //
-    console.log("Kur güncelleniyor...");
-
-    await KurGüncelle();
-     baslangicZamani = suankiZaman;
-    
-    /*
-      await KurGüncelle().then(kur => {
-        console.log("Dolar:", kur[0]);
-        console.log("Euro:", kur[1]);
-      }).catch(error => {
-          console.error("Hata:", error);
-      });
-      */
-  }
 
   let content = message.content.substring(1);
   let data = content.split(" ");
@@ -735,20 +714,21 @@ async function ConnectEvents() {
   client.on("messageCreate", OnMessageCreate);
 }
 
-function Loop(bypass = false) {
+async function Loop(bypass = false) {
   
   let suankiZaman = new Date();
   let gecenSure = suankiZaman - loopStart;
-  
-  
-  if (gecenSure >= 30 * 60 * 1000 || bypass == true) { // 30 dakika da bir bağlantıları yenile.
+
+  if (gecenSure >= LoopGüncellemePeriyodu || bypass == true) { //
+    console.log("Kur güncelleniyor...");
+    await KurGüncelle();
     console.log("Bağlantılar kalibre ediliyor...")
     ConnectEvents()
     loopStart = suankiZaman;
   }
-  
+
   if (!bypass) {
-    setTimeout(Loop,10 * 60 * 1000) // Her 10 dakika da bir kendini yenile
+    setTimeout(Loop,LoopGüncellemePeriyodu) // Her 10 dakika da bir kendini yenile
   }
 }
 
