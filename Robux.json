@@ -12,7 +12,7 @@
       20000,
       30000
     ],
-    "make": true,
-    "commission": 5.5
-  }
+    "make": true
+  },
+  "Commission": 5.5
 }
