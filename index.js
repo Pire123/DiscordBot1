@@ -29,7 +29,9 @@ const client = new Client({
     Partials.Reaction,
   ],
 });
-var kDeğeri = 2.75 // 2,75 Tether US
+
+var BorsaKomisyonuDeğeri = 0
+var kDeğeri = 3 // 2,75 Tether US
 var Client_Closed = false
 
 var Wallets_Json = null;
@@ -175,7 +177,7 @@ function MathCeil(V,digit = 2) {
 function BorsaKomisyonu(Fiyat_Dolar) {
   // Her 31,40 dolarda 1,60 dolar komsiyon alıyor. Bu, %5.1 komisyon eder.
   
-  return Fiyat_Dolar / 100 * 5.25
+  return Fiyat_Dolar / 100 * BorsaKomisyonuDeğeri
 }
 
 function TextDolarTL(dolar) {
@@ -185,7 +187,6 @@ function TextDolarTL(dolar) {
 async function OnReady() {
   console.log("Kur Güncelleniyor...");
   await KurGüncelle();
-  baslangicZamani = new Date();
   console.log("Hazır!");
 }
 
@@ -682,6 +683,8 @@ async function ConnectEvents() {
     
     kDeğeri = Price_Json["Robux"]["price"]
     
+    BorsaKomisyonuDeğeri = parseFloat(String(Price_Json["Commission"]))
+  
     let k_indirim = []
     
     for (var value in Price_Json["Sale"]) {
