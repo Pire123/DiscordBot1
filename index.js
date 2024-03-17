@@ -31,7 +31,7 @@ const client = new Client({
 });
 
 var BorsaKomisyonuDeğeri = 0
-var kDeğeri = 3 // 2,75 Tether US
+var kDeğeri = 3.25
 var Client_Closed = false
 
 var Wallets_Json = null;
@@ -89,9 +89,12 @@ var loopStart = null
 var indirim = []
 var indirim_uygula = true;
 
+var arayüz = ["OK","1.1.2024"]
+
 var YARDIM_YAZISI = "Kullanabileceğiniz komutlar:\n---> **!robux {miktar}** ile istenilen miktarda robuxun ne kadar ettiğini,\n---> **!fiyat {para birimi} {miktar}** ile para birimi miktarının ne kadar robux ettiğini,\n---> **!kripto {kripto adı} {özelliği}** ile aktif kripto ödeme yöntemlerine,\n erişebilirsiniz.\n\nÖrnek Kullanımlar:\n---> **!robux 2500** = 2500 robuxun değeri,\n---> **!fiyat tl 500** = 500 TL'ye ne kadar robux geliyorsa,\n---> **!fiyat dolar 20** = 20 dolara ne kadar robux geliyorsa,\n---> **!kripto** ile tüm cüzdanlara,\n---> **!kripto ltc** ile Litecoin bilgilerine,\n---> **!kripto ltc note** ile Litecoin için nelere ihtiyacınız olduğunu bilgisine,\n---> **!kripto ltc wallet** ile de Litecoin ödeme cüzdan adresine ulaşabilirsiniz."
 
 function HttpRequest(url) {
+  
     return new Promise((resolve, reject) => {
       
         let req = https.request(url, (response) => {
@@ -110,6 +113,10 @@ function HttpRequest(url) {
         });
         // send the request
        req.end();
+    }).catch(function(error) {
+
+      console.log("Promise hata verdi: ",error);
+
     });
 }
 
@@ -185,9 +192,7 @@ function TextDolarTL(dolar) {
 }
 
 async function OnReady() {
-  console.log("Kur Güncelleniyor...");
-  await KurGüncelle();
-  console.log("Hazır!");
+  console.log("Bot hazır.");
 }
 
 var Collectors = []
@@ -728,6 +733,10 @@ async function Loop(bypass = false) {
     console.log("Bağlantılar kalibre ediliyor...")
     ConnectEvents()
     loopStart = suankiZaman;
+    
+    let zz = suankiZaman.setHours(suankiZaman.getHours() + 3)
+    
+    arayüz[1] = ("En son guncelleme: " + suankiZaman.toString() + "(Istanbul)")
   }
 
   if (!bypass) {
@@ -744,7 +753,9 @@ function ServerRequestListener(request, response) {
     str = "BOT KAPALI."
   }
   else {
-    str = "OK"
+    arayüz.forEach((element) => {
+      str = str + element + "\n"
+    });
   }
   
   response.write(str);
@@ -756,7 +767,7 @@ client.login(TOKEN).catch(err => {
   console.log(("Couldn't log into Discord. Wrong bot token?"));
   console.log('');
   console.log(err);
-});;
+});
 
 Loop()
 
