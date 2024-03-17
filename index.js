@@ -116,7 +116,7 @@ function HttpRequest(url) {
     }).catch(function(error) {
 
       console.log("Promise hata verdi: ",error);
-
+      return null;
     });
 }
 
