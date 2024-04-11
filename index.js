@@ -86,6 +86,12 @@ var Kur = [];
 var LoopGüncellemePeriyodu = 30 * 60 * 1000;
 var loopStart = null
 
+const launchpool_api = "https://launchpad.binance.com/bapi/lending/v1/friendly/launchpool/project/listV3?pageIndex=1&pageSize=4"
+const binanace_channels = ["1228029571195211786"]
+
+var BinanaceGüncellemePeriyodu = 6 * 60 * 60 * 1000;
+var BinanaceStart = null
+
 var indirim = []
 var indirim_uygula = true;
 
@@ -191,8 +197,26 @@ function TextDolarTL(dolar) {
   return "(**" + DolarTL(dolar) + " TL değerinde**)"
 }
 
-async function OnReady() {
-  console.log("Bot hazır.");
+async function GetLaunchpool() {
+  var json =  await HttpRequest(launchpool_api);
+  
+  if (json.success) {
+    
+    let any_thing = false
+    
+    if (json.data.coming.length) {
+      return "yeni bir şeyler geliyor !"
+    }
+    
+    if (json.data.tracking.length) {
+      return "devam eden projeler var."
+    }
+    
+    return null;
+  }
+  else {
+    return null;
+  }
 }
 
 var Collectors = []
@@ -242,7 +266,6 @@ async function OnMessageCreate(message) {
   }
   
   let admin = (message.author.id == OWNER)
-
   let content = message.content.substring(1);
   let data = content.split(" ");
 
@@ -459,7 +482,6 @@ async function OnMessageCreate(message) {
         var coin_name = x
 
         if (x == null || coin_data.code == null) {
-          console.log((coin_data.code))
           continue
         }
 
@@ -726,7 +748,8 @@ async function Loop(bypass = false) {
   
   let suankiZaman = new Date();
   let gecenSure = suankiZaman - loopStart;
-
+  let gecenSure2 = suankiZaman - BinanaceStart;
+  
   if (gecenSure >= LoopGüncellemePeriyodu || bypass == true) { //
     console.log("Kur güncelleniyor...");
     await KurGüncelle();
@@ -737,6 +760,18 @@ async function Loop(bypass = false) {
     let zz = suankiZaman.setHours(suankiZaman.getHours() + 3)
     
     arayüz[1] = ("En son guncelleme: " + suankiZaman.toString() + "(Istanbul)")
+  }
+
+  if (gecenSure2 >= BinanaceGüncellemePeriyodu) {
+     let content = await GetLaunchpool()
+     if (content != null) {
+       binanace_channels.forEach(i => {
+         console.log(i)
+         let channel = client.channels.cache.find(x => x.id === i)
+         channel.send(content)
+       })
+     }
+     BinanaceStart = suankiZaman
   }
 
   if (!bypass) {
@@ -762,14 +797,19 @@ function ServerRequestListener(request, response) {
   response.end();
 }
 
+async function OnReady() {
+  console.log("Bot hazır.");
+  Loop()
+}
+
+ConnectEvents()
+
 client.login(TOKEN).catch(err => {
   console.log('');
   console.log(("Couldn't log into Discord. Wrong bot token?"));
   console.log('');
   console.log(err);
 });
-
-Loop()
 
 server.on("request", ServerRequestListener);
 
