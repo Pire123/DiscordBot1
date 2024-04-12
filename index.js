@@ -204,12 +204,12 @@ async function GetLaunchpool() {
     
     let any_thing = false
     
-    if (json.data.coming.length) {
-      return "yeni bir şeyler geliyor !"
+    if (json.data.coming.length > 0) {
+      return json.data.coming
     }
     
-    if (json.data.tracking.length) {
-      return "devam eden projeler var."
+    if (json.data.tracking.length > 0) {
+      return json.data.tracking
     }
     
     return null;
@@ -768,7 +768,12 @@ async function Loop(bypass = false) {
        binanace_channels.forEach(i => {
          console.log(i)
          let channel = client.channels.cache.find(x => x.id === i)
-         channel.send(content)
+         
+         if(channel) {
+           content.forEach(item => {
+             channel.send(item.rebateCoin + " isimli koinde bir şeyler oluyor !")
+           })
+         }
        })
      }
      BinanaceStart = suankiZaman
