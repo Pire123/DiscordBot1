@@ -807,6 +807,9 @@ async function OnReady() {
   Loop()
 }
 
+client.on("ready", OnReady)
+client.on("messageCreate", OnMessageCreate);
+
 ConnectEvents()
 
 client.login(TOKEN).catch(err => {
