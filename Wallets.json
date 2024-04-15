@@ -37,5 +37,17 @@
     ],
     "note": "wallet ve network zorunludur.",
     "emoji":":internetcomputer:"
+  },
+   "Nano": {
+    "wallet": "nano_33kptph19fns5igf1aqipycotq8ygu4p31hc5ecm4oz46cjtj7r96p1xez5p",
+    "network": "Nano",
+    "code": "XNO",
+    "min": 0.001,
+    "important": [
+      "wallet",
+      "network"
+    ],
+    "note": "wallet ve network zorunludur.",
+    "emoji":":nano:"
   }
 }
