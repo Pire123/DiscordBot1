@@ -49,5 +49,17 @@
     ],
     "note": "wallet ve network zorunludur.",
     "emoji":":nano:"
-  }
+  },
+   "USDT-Tron": {
+    "wallet": "TBEotrJRv55KMvqnxJEZdmXJfzYB3hfmRK",
+    "network": "Tron-TRX/TRC20",
+    "code": "USDT",
+    "min": 0.001,
+    "important": [
+      "wallet",
+      "network"
+    ],
+    "note": "wallet ve network zorunludur.",
+    "emoji":":usdt:"
+   }
 }
