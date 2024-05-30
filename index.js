@@ -101,15 +101,22 @@ var YARDIM_YAZISI = "Kullanabileceğiniz komutlar:\n---> **!robux {miktar}** ile
 
 function HttpRequest(url) {
   
+  
+    console.log(url)
     return new Promise((resolve, reject) => {
+
       
         let req = https.request(url, (response) => {
+          
+          
+          
             let data = ''; 
             response.on('data', (chunk) => { 
-                data = data + chunk.toString(); 
+                data = data + chunk; 
             }); 
 
             response.on('end', () => { 
+              console.log(data)
                 resolve(JSON.parse(data));
             }); 
         });
@@ -762,6 +769,7 @@ async function Loop(bypass = false) {
     arayüz[1] = ("En son guncelleme: " + suankiZaman.toString() + "(Istanbul)")
   }
 
+  /*
   if (gecenSure2 >= BinanaceGüncellemePeriyodu) {
      let content = await GetLaunchpool()
      if (content != null) {
@@ -778,6 +786,7 @@ async function Loop(bypass = false) {
      }
      BinanaceStart = suankiZaman
   }
+  */
 
   if (!bypass) {
     setTimeout(Loop,LoopGüncellemePeriyodu) // Her 10 dakika da bir kendini yenile
@@ -806,9 +815,6 @@ async function OnReady() {
   console.log("Bot hazır.");
   Loop()
 }
-
-client.on("ready", OnReady)
-client.on("messageCreate", OnMessageCreate);
 
 ConnectEvents()
 
